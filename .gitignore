@@ -1,0 +1,11 @@
+# Environment variables
+.env
+
+# N8N data directory (optional - you might want to commit this structure)
+# n8n_data/
+
+# Docker volumes
+volumes/
+
+# Logs
+*.log
