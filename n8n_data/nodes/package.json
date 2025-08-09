@@ -1,5 +1,7 @@
 {
   "name": "installed-nodes",
   "private": true,
-  "dependencies": {}
+  "dependencies": {
+    "@devlikeapro/n8n-nodes-waha": "2025.2.9"
+  }
 }
