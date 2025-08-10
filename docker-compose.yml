@@ -43,8 +43,10 @@ services:
     image: nginx:alpine
     container_name: nginx-proxy
     depends_on:
-      - n8n
-      - waha
+      n8n:
+        condition: service_healthy
+      waha:
+        condition: service_healthy
     ports:
       - "8080:80"
     volumes:
