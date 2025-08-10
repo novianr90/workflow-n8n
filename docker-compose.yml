@@ -1,32 +1,9 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: postgres
-    ports:
-      - "${POSTGRES_PORT}:5432"
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - n8n_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "until pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do echo 'Postgres not ready yet...'; sleep 5; done"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-
   n8n:
     image: n8nio/n8n:latest
     container_name: n8n
     ports:
       - "${N8N_PORT}:5678"
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - ./n8n_data:/home/node/.n8n
       - ./bootstrap.sh:/docker-entrypoint-init.d/bootstrap.sh
@@ -34,14 +11,8 @@ services:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
-      - DB_TYPE=${N8N_DB_TYPE}
-      - DB_POSTGRESDB_HOST=${N8N_DB_HOST}
-      - DB_POSTGRESDB_PORT=${N8N_DB_PORT}
-      - DB_POSTGRESDB_DATABASE=${N8N_DB_NAME}
-      - DB_POSTGRESDB_USER=${POSTGRES_USER}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
       - TZ=Asia/Jakarta
-      - NODE_OPTIONS=--max_old_space_size=512
+      - NODE_OPTIONS=--max_old_space_size=300
     networks:
       - n8n_network
     restart: unless-stopped
@@ -70,10 +41,8 @@ services:
     image: nginx:alpine
     container_name: nginx-proxy
     depends_on:
-      n8n:
-        condition: service_healthy
-      waha:
-        condition: service_healthy
+      - n8n
+      - waha
     ports:
       - "80:80"
       - "443:443"
@@ -87,6 +56,3 @@ services:
 networks:
   n8n_network:
     driver: bridge
-
-volumes:
-  postgres_data:
