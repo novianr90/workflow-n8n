@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+# Auth files
+nginx-auth/.htpasswd
+
 # Node modules
 node_modules/
 npm-debug.log*

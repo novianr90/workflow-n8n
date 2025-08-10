@@ -78,6 +78,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-auth/.htpasswd:/etc/nginx/.htpasswd:ro
     networks:
       - n8n_network
     restart: unless-stopped
