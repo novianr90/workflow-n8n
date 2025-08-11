@@ -2,7 +2,6 @@ services:
   n8n:
     image: n8nio/n8n:latest
     container_name: n8n
-    # Remove direct port exposure - hanya accessible lewat nginx
     volumes:
       - ./n8n_data:/home/node/.n8n
       - ./bootstrap.sh:/docker-entrypoint-init.d/bootstrap.sh
@@ -27,7 +26,6 @@ services:
   waha:
     image: devlikeapro/waha
     container_name: waha
-    # Remove direct port exposure - hanya accessible lewat nginx
     networks:
       - n8n_network
     stdin_open: true
