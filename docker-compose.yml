@@ -12,7 +12,7 @@ services:
       - N8N_SECURE_COOKIE=false
       - TZ=Asia/Jakarta
       - NODE_OPTIONS=--max_old_space_size=300
-      - N8N_RUNNERS_ENABLED=true
+      - N8N_RUNNERS_ENABLED=false
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - WEBHOOK_URL=http://${N8N_HOST}:${N8N_PORT}
       - N8N_HOST=${N8N_HOST}
