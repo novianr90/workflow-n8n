@@ -18,6 +18,11 @@ services:
       - N8N_HOST=${N8N_HOST}
       - N8N_PORT=${N8N_PORT}
       - N8N_PROTOCOL=http
+      - N8N_DISABLE_UI=false
+      - N8N_METRICS=false
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - N8N_TEMPLATES_ENABLED=false
     networks:
       - n8n_network
     restart: unless-stopped
