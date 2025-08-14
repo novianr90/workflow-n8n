@@ -39,6 +39,8 @@ services:
       - n8n_network
     stdin_open: true
     tty: true
+    environment:
+      - WAHA_APPS_ENABLED=true
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/api/sessions || exit 1"]
       interval: 20s
