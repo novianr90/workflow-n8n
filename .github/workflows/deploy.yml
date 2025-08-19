@@ -23,23 +23,32 @@ jobs:
         script: |
           cd ~/workflow-n8n
           
+          # Check which docker compose command is available
+          if command -v docker-compose &> /dev/null; then
+            COMPOSE_CMD="docker-compose"
+          else
+            COMPOSE_CMD="docker compose"
+          fi
+          
+          echo "Using: $COMPOSE_CMD"
+          
           # Pull latest changes
           git pull origin master
           
           # Pull new images first (while containers running)
-          docker-compose pull
+          $COMPOSE_CMD pull
           
           # Stop containers
-          docker-compose down
+          $COMPOSE_CMD down
           
           # Start with new images
-          docker-compose up -d
+          $COMPOSE_CMD up -d
           
           # Clean up old images to free space
           docker image prune -f
           docker container prune -f
           
           # Show status
-          docker-compose ps
+          $COMPOSE_CMD ps
           
           echo "✅ Deployment completed successfully!"
