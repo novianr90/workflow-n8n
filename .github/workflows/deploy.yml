@@ -3,6 +3,10 @@ name: Deploy to VPS
 on:
   push:
     branches: [ master, main ]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
   workflow_dispatch:  # Manual trigger
 
 jobs:
@@ -20,8 +24,12 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT }}
+        timeout: 300s
         script: |
-          cd ~/workflow-n8n
+          set -e  # Exit on any error
+          
+          echo "🚀 Starting deployment..."
+          cd workflow-n8n
           
           # Check which docker compose command is available
           if command -v docker-compose &> /dev/null; then
@@ -32,23 +40,44 @@ jobs:
           
           echo "Using: $COMPOSE_CMD"
           
+          # Show current status
+          echo "📊 Current status:"
+          $COMPOSE_CMD ps
+          
           # Pull latest changes
+          echo "📥 Pulling latest changes..."
           git pull origin master
           
+          # Create backup of important data
+          echo "💾 Creating backup..."
+          [ -d "backups" ] || mkdir backups
+          tar -czf "backups/n8n_backup_$(date +%Y%m%d_%H%M%S).tar.gz" n8n_data/ || true
+          
           # Pull new images first (while containers running)
+          echo "🐳 Pulling latest Docker images..."
           $COMPOSE_CMD pull
           
           # Stop containers
+          echo "🔄 Restarting services..."
           $COMPOSE_CMD down
           
           # Start with new images
-          $COMPOSE_CMD up -d
+          $COMPOSE_CMD up -d --remove-orphans
+          
+          # Wait for services to be healthy
+          echo "⏳ Waiting for services to be healthy..."
+          sleep 30
           
           # Clean up old images to free space
+          echo "🧹 Cleaning up..."
           docker image prune -f
           docker container prune -f
           
-          # Show status
+          # Keep only last 5 backups
+          cd backups && ls -t *.tar.gz | tail -n +6 | xargs -r rm && cd .. || true
+          
+          # Show final status
+          echo "📋 Final status:"
           $COMPOSE_CMD ps
           
           echo "✅ Deployment completed successfully!"
