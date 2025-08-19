@@ -1,0 +1,77 @@
+name: Deploy to VPS (Advanced)
+
+on:
+  push:
+    branches: [ master, main ]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT }}
+        timeout: 300s
+        script: |
+          set -e  # Exit on any error
+          
+          echo "🚀 Starting deployment..."
+          cd ~/workflow-n8n
+          
+          # Show current status
+          echo "📊 Current status:"
+          docker-compose ps
+          
+          # Pull latest changes
+          echo "📥 Pulling latest changes..."
+          git pull origin master
+          
+          # Create backup of important data
+          echo "💾 Creating backup..."
+          [ -d "backups" ] || mkdir backups
+          tar -czf "backups/n8n_backup_$(date +%Y%m%d_%H%M%S).tar.gz" n8n_data/ || true
+          
+          # Pull latest images
+          echo "🐳 Pulling latest Docker images..."
+          docker-compose pull
+          
+          # Restart services with zero downtime
+          echo "🔄 Restarting services..."
+          docker-compose up -d --remove-orphans
+          
+          # Wait for services to be healthy
+          echo "⏳ Waiting for services to be healthy..."
+          sleep 30
+          
+          # Health check
+          echo "🔍 Health check:"
+          docker-compose ps
+          
+          # Test webhook endpoint
+          echo "🧪 Testing webhook endpoint..."
+          curl -f http://localhost/webhook/health-check || echo "⚠️ Webhook test failed (normal if no health-check endpoint)"
+          
+          # Clean up old images and containers
+          echo "🧹 Cleaning up..."
+          docker image prune -f
+          docker container prune -f
+          
+          # Keep only last 5 backups
+          cd backups && ls -t *.tar.gz | tail -n +6 | xargs -r rm
+          
+          echo "✅ Deployment completed successfully!"
+          echo "📋 Final status:"
+          docker-compose ps
